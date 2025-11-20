@@ -1,11 +1,21 @@
 import pygame
-from constants import PLAYER_RADIUS, LINE_WIDTH, PLAYER_TURN_SPEED, PLAYER_SPEED
+from constants import (
+    PLAYER_RADIUS,
+    LINE_WIDTH,
+    PLAYER_TURN_SPEED,
+    PLAYER_SPEED,
+    PLAYER_SHOOT_SPEED,   # ⬅️ new
+    SHOT_RADIUS,          # ⬅️ if you added it
+    PLAYER_SHOOT_COOLDOWN_SECONDS,
+)
 from circleshape import CircleShape
+from shot import Shot
 
 class Player(CircleShape):
     def __init__(self, x, y):
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation = 0
+        self.shoot_cooldown = 0 # starts at zero, meaning ready to fire
 
 
     # in the Player class
@@ -32,6 +42,10 @@ class Player(CircleShape):
     def update(self, dt):
         keys = pygame.key.get_pressed()
 
+        # Reduce cooldown over time
+        if self.shoot_cooldown > 0:
+            self.shoot_cooldown -= dt
+
         if keys[pygame.K_a]:
             self.rotate(-dt) # turn left
 
@@ -44,6 +58,21 @@ class Player(CircleShape):
         if keys[pygame.K_s]:
             self.move(-dt)
 
+        if keys[pygame.K_SPACE]:
+            self.shoot()
+
+    def shoot(self):
+        # If still cooling down do nothing
+        if self.shoot_cooldown > 0:
+            return
+        
+        # Reset cooldown
+        self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN_SECONDS
+
+        # Direction the player is facing
+        direction = pygame.Vector2(0, 1).rotate(self.rotation)
+        shot = Shot(self.position.x, self.position.y, SHOT_RADIUS)
+        shot.velocity = direction * PLAYER_SHOOT_SPEED
     
 
         
